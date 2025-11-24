@@ -31,8 +31,7 @@ public:
 
     // Match an incoming order against the book
     // Returns list of trades and leftover quantity (if any).
-    std::pair<std::vector<Trade>, Quantity>
-    match_incoming(const BookOrder& incoming, std::uint64_t ts_ns);
+    std::pair<std::vector<Trade>, Quantity> match_incoming(const BookOrder& incoming, std::uint64_t ts_ns);
 
     // Query best bid / ask
     std::optional<BookLevel> best_bid() const;
@@ -54,7 +53,7 @@ private:
 
     // Helper: locate order by id (linear scan for demo; could be indexed)
     bool remove_from_side(OrderId id, std::map<Price, Queue, std::greater<Price>>& side);
-    bool remove_from_side(OrderId id, std::map<Price, Queue, std::less<Price>>& side);
+    bool remove_from_side(OrderId id, std::map<Price, Queue, std::less<Price>>&    side);
 };
 
 } // namespace MarketMicroStructure

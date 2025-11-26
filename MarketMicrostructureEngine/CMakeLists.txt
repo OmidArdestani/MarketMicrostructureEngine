@@ -1,7 +1,7 @@
 project(MarketMicrostructureEngine LANGUAGES CXX)
 
-add_library(MarketMicrostructureEngine SHARED)
-target_sources(MarketMicrostructureEngine
+add_library(MarketMicrostructureEngineLib SHARED)
+target_sources(MarketMicrostructureEngineLib
     PRIVATE
         src/order_book.cpp
         src/matching_engine.cpp
@@ -14,13 +14,13 @@ target_sources(MarketMicrostructureEngine
         include/types.h
 )
 
-target_include_directories(MarketMicrostructureEngine
+target_include_directories(MarketMicrostructureEngineLib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 # Install the library (DLL / SO)
-install(TARGETS MarketMicrostructureEngine
+install(TARGETS MarketMicrostructureEngineLib
     RUNTIME DESTINATION bin        # Windows .dll
     LIBRARY DESTINATION lib        # Linux .so, Mac .dylib
     ARCHIVE DESTINATION lib        # Windows .lib

@@ -1,6 +1,6 @@
 #include <order_book.h>
 
-namespace MarketMicroStructure {
+using namespace MarketMicroStructure;
 
 OrderBook::OrderBook(SymbolId symbol)
     : symbol_(std::move(symbol))
@@ -192,5 +192,3 @@ std::vector<BookLevel> OrderBook::asks(std::size_t depth) const
 
     return out;
 }
-
-} // namespace MarketMicroStructure

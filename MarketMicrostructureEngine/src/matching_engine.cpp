@@ -7,12 +7,12 @@ MatchingEngine::MatchingEngine(MarketDataPublisher& md_pub)
     : md_pub_(md_pub)
 {}
 
-void MatchingEngine::add_symbol(SymbolId symbol) 
+void MatchingEngine::addSymbol(SymbolId symbol) 
 {
     books_.try_emplace(symbol, symbol);
 }
 
-void MatchingEngine::handle_new_order(const NewOrder& o, std::uint64_t ts_ns) 
+void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns) 
 {
     auto it = books_.find(o.symbol);
     if (it == books_.end()) 
@@ -46,63 +46,63 @@ void MatchingEngine::handle_new_order(const NewOrder& o, std::uint64_t ts_ns)
     }
 
     // Match against book
-    auto [trades, remaining] = book.match_incoming(incoming, ts_ns);
+    auto [trades, remaining] = book.matchIncoming(incoming, ts_ns);
 
     // Publish trades
     for (auto const& t : trades) 
     {
-        md_pub_.publish_trade(t);
+        md_pub_.publishTrade(t);
     }
 
     // If limit order has remaining qty & is allowed to rest
     if (o.type == OrderType::Limit && remaining > 0) 
     {
         incoming.qty = remaining;
-        book.add_order(incoming);
+        book.addOrder(incoming);
     }
 
     // Publish top-of-book after each change
     TopOfBook tob;
     tob.symbol = o.symbol;
-    if (auto best_bid = book.best_bid()) 
+    if (auto best_bid = book.bestBid()) 
     {
         tob.best_bid = *best_bid;
         tob.valid = true;
     }
-    if (auto best_ask = book.best_ask()) 
+    if (auto best_ask = book.bestAsk()) 
     {
         tob.best_ask = *best_ask;
         tob.valid = tob.valid && true;
     }
     if (tob.valid) 
     {
-        md_pub_.publish_top_of_book(tob);
+        md_pub_.publishTopOfBook(tob);
     }
 }
 
-void MatchingEngine::handle_cancel(const CancelOrder& c) 
+void MatchingEngine::handleCancel(const CancelOrder& c) 
 {
     // Very naive: scan all books and cancel first match
     for (auto& [sym, book] : books_) 
     {
-        if (book.cancel_order(c.id)) 
+        if (book.cancelOrder(c.id)) 
         {
             // After cancel we could publish new top-of-book
             TopOfBook tob;
             tob.symbol = sym;
-            if (auto best_bid = book.best_bid()) 
+            if (auto best_bid = book.bestBid()) 
             {
                 tob.best_bid = *best_bid;
                 tob.valid = true;
             }
-            if (auto best_ask = book.best_ask()) 
+            if (auto best_ask = book.bestAsk()) 
             {
                 tob.best_ask = *best_ask;
                 tob.valid = tob.valid && true;
             }
             if (tob.valid) 
             {
-                md_pub_.publish_top_of_book(tob);
+                md_pub_.publishTopOfBook(tob);
             }
             break;
         }

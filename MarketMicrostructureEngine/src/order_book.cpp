@@ -6,7 +6,7 @@ OrderBook::OrderBook(SymbolId symbol)
     : symbol_(std::move(symbol))
 {}
 
-void OrderBook::add_order(const BookOrder& ord) 
+void OrderBook::addOrder(const BookOrder& ord) 
 {
     if (ord.side == Side::Buy)
     {
@@ -18,7 +18,7 @@ void OrderBook::add_order(const BookOrder& ord)
     }
 }
 
-bool OrderBook::remove_from_side(OrderId id, std::map<Price, Queue, std::greater<Price>>& side)
+bool OrderBook::removeFromSide(OrderId id, std::map<Price, Queue, std::greater<Price>>& side)
 {
     for (auto it = side.begin(); it != side.end(); )
     {
@@ -40,7 +40,7 @@ bool OrderBook::remove_from_side(OrderId id, std::map<Price, Queue, std::greater
     return false;
 }
 
-bool OrderBook::remove_from_side(OrderId id, std::map<Price, Queue, std::less<Price>>& side)
+bool OrderBook::removeFromSide(OrderId id, std::map<Price, Queue, std::less<Price>>& side)
 {
     for (auto it = side.begin(); it != side.end(); )
     {
@@ -63,15 +63,15 @@ bool OrderBook::remove_from_side(OrderId id, std::map<Price, Queue, std::less<Pr
     return false;
 }
 
-bool OrderBook::cancel_order(OrderId id)
+bool OrderBook::cancelOrder(OrderId id)
 {
-    if (remove_from_side(id, bids_)) return true;
-    if (remove_from_side(id, asks_)) return true;
+    if (removeFromSide(id, bids_)) return true;
+    if (removeFromSide(id, asks_)) return true;
 
     return false;
 }
 
-std::pair<std::vector<Trade>, Quantity> OrderBook::match_incoming(const BookOrder& incoming, std::uint64_t ts_ns)
+std::pair<std::vector<Trade>, Quantity> OrderBook::matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns)
 {
     std::vector<Trade> trades;
     Quantity remaining = incoming.qty;
@@ -135,7 +135,7 @@ std::pair<std::vector<Trade>, Quantity> OrderBook::match_incoming(const BookOrde
     return {trades, remaining};
 }
 
-std::optional<BookLevel> OrderBook::best_bid() const
+std::optional<BookLevel> OrderBook::bestBid() const
 {
     if (bids_.empty()) return std::nullopt;
     Price p = bids_.begin()->first;
@@ -148,7 +148,7 @@ std::optional<BookLevel> OrderBook::best_bid() const
     return BookLevel{p, q};
 }
 
-std::optional<BookLevel> OrderBook::best_ask() const
+std::optional<BookLevel> OrderBook::bestAsk() const
 {
     if (asks_.empty()) return std::nullopt;
     Price p = asks_.begin()->first;

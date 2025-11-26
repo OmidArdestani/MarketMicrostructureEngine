@@ -65,4 +65,13 @@ struct TopOfBook {
     bool     valid{false};
 };
 
+struct BookOrder {
+    OrderId   id;
+    TraderId  trader;
+    Quantity  qty;
+    Price     price;
+    Side      side;
+    std::uint64_t ts_ns; // arrival time, for time priority
+};
+
 } // namespace MarketMicroStructure

@@ -8,6 +8,7 @@ target_sources(MarketMicrostructureSim
         src/main.cpp
         include/sim_event_loop.h
         include/scenario_loader.h
+        include/HPRingBuffer.hpp
 )
 
 target_include_directories(MarketMicrostructureEngineLib

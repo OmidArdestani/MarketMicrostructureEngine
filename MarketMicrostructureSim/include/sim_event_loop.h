@@ -1,6 +1,7 @@
 #pragma once
 
-#include <vector>
+#include "HPRingBuffer.hpp"
+#include <thread>
 #include <types.h>
 #include <matching_engine.h>
 
@@ -13,13 +14,18 @@ struct EngineEvent {
     std::uint64_t ts_ns{};
 };
 
+using EventLoopBuffer = HPRingBuffer<EngineEvent, 8192>;
+
 class EventLoop {
 public:
     explicit EventLoop(MatchingEngine& engine);
-    void run(const std::vector<EngineEvent>& events);
+    void run(EventLoopBuffer &events);
+    std::thread runAsync(EventLoopBuffer &events);
+    void setWaitForDone(){ WaitForDone = true; }
 
 private:
     MatchingEngine& engine_;
+    bool WaitForDone { false };
 };
 
 } // namespace ms

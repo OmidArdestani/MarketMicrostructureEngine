@@ -34,14 +34,17 @@ void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns)
     // Market order: treat price as crossing “infinite”
     if (o.type == OrderType::Market) 
     {
-        if (o.side == Side::Buy) 
+        static Price MaxPrice{ std::numeric_limits<Price>::max() };
+        static Price MinPrice{ std::numeric_limits<Price>::min() };
+
+        if (o.side == Side::Buy)
         {
             // big price to cross all asks
-            incoming.price = std::numeric_limits<Price>::max();
+            incoming.price = MaxPrice;
         } 
         else 
         {
-            incoming.price = std::numeric_limits<Price>::min();
+            incoming.price = MinPrice;
         }
     }
 

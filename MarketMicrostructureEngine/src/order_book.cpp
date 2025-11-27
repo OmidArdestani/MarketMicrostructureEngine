@@ -107,7 +107,7 @@ std::pair<std::vector<Trade>, Quantity> OrderBook::matchIncoming(const BookOrder
                 ts_ns
             });
 
-            remaining -= traded_qty;
+            remaining   -= traded_qty;
             resting.qty -= traded_qty;
 
             if (resting.qty == 0)

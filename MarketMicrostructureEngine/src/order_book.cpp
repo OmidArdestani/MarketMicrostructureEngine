@@ -73,8 +73,10 @@ bool OrderBook::cancelOrder(OrderId id)
 
 std::pair<std::vector<Trade>, Quantity> OrderBook::matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns)
 {
-    std::vector<Trade> trades;
+    static std::vector<Trade> trades;
     Quantity remaining = incoming.qty;
+
+    trades.clear();
 
     auto exec = [&](auto& book_side, Side aggressor_side) 
     {

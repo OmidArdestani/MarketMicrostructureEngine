@@ -1,6 +1,7 @@
 project(MarketMicrostructureEngine LANGUAGES CXX)
 
-add_library(MarketMicrostructureEngineLib SHARED)
+add_library(MarketMicrostructureEngineLib SHARED
+    include/ScopeTimer.hpp)
 target_sources(MarketMicrostructureEngineLib
     PRIVATE
         src/order_book.cpp

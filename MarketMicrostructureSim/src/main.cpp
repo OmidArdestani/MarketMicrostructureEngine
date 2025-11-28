@@ -1,10 +1,10 @@
-#include <iostream>
 #include <random>
 
 #include <matching_engine.h>
 #include <market_data_publisher.h>
 #include <types.h>
 
+#include <ScopeTimer.hpp>
 #include <sim_event_loop.h>
 
 using namespace MarketMicroStructure;
@@ -54,7 +54,6 @@ EngineEvent buildEvent()
     }
 }
 
-
 int main() {
     MarketDataPublisher md_pub;
 
@@ -83,9 +82,13 @@ int main() {
     EventLoopBuffer events;
     auto task = loop.runAsync(events);
 
-    auto start_time = std::chrono::steady_clock::now();
 
-    uint64_t MAX_TRY{ 1000'000 };
+    using stm = ScopeTimerManagement<std::chrono::nanoseconds>;
+    stm::start("Main Duration");
+
+
+    uint64_t MAX_TRY{ 1'000'000 };
+    // uint64_t MAX_TRY{ 5 };
     while( MAX_TRY > 0 )
     {
         if(events.push(buildEvent()))
@@ -101,10 +104,7 @@ int main() {
 
     task.join();
 
-    auto end_time = std::chrono::steady_clock::now();
-
-    std::cout.imbue(std::locale("en_US.UTF-8"));
-    std::cout << std::endl << "Job duration for 1e6 events: " << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << " [us]" << std::endl;
+    stm::endAndLog("Main Duration");
 
     return 0;
 }

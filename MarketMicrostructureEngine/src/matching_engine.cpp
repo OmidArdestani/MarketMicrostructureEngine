@@ -1,5 +1,6 @@
 #include <matching_engine.h>
 #include <iostream>
+#include <ScopeTimer.hpp>
 
 using namespace MarketMicroStructure;
 

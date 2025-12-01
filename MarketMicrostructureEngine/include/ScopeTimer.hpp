@@ -1,7 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <print>    // C++23: std::print / std::println
+#include <iostream>
+#include <string_view>
 
 // Optional compile-time switch to disable all timing with zero runtime cost
 #ifndef SCOPE_TIMER_DISABLED
@@ -84,7 +85,7 @@ private:
 
         auto units = std::chrono::duration_cast<T>(duration);
 
-        std::println("[ScopeTimer] took {:L}", units);
+        std::cout << "[ScopeTimer] took " << units.count() << "\n";
     }
 
     TimePoint beginTime_;
@@ -158,7 +159,7 @@ private:
 
         auto units = std::chrono::duration_cast<T>(duration);
 
-        std::println("[ScopeTimer] {} took {:L}", label, units);
+        std::cout << "[ScopeTimer] " << label << " took " << units.count() << "\n";
     }
 
 private:

@@ -139,9 +139,9 @@ public:
         auto& slots = slots_;
         for(auto& item : slots)
         {
-            if(item.used && item.label == label)
+            if(item.label == label)
             {
-                item.used = false;
+                // item.used = false;
                 auto d = item.scopeTimer.end();
                 log_(d, item.label);
 
@@ -171,3 +171,5 @@ private:
     static thread_local inline Slot slots_[SCOPE_TIMER_MAX_SLOTS];
 };
 
+
+using NScopeTimers = ScopeTimerManagement<std::chrono::nanoseconds>;

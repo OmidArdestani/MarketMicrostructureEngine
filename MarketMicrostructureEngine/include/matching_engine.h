@@ -22,7 +22,8 @@ public:
 
 private:
     MarketDataPublisher& md_pub_;
-    std::unordered_map<SymbolId, OrderBook> books_;
+    // std::unordered_map<SymbolId, OrderBook> books_;
+    std::vector<OrderBook> books_;
 };
 
 } // namespace MarketMicroStructure

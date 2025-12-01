@@ -22,7 +22,7 @@ public:
 
     // Match an incoming order against the book
     // Returns list of trades and leftover quantity (if any).
-    std::pair<std::vector<Trade>, Quantity> matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns);
+    std::pair<std::vector<Trade>*, Quantity> matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns);
 
     // Query best bid / ask
     std::optional<BookLevel> bestBid() const;

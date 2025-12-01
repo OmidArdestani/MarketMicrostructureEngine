@@ -1,5 +1,4 @@
 #include <matching_engine.h>
-#include <iostream>
 #include <ScopeTimer.hpp>
 
 using namespace MarketMicroStructure;
@@ -10,18 +9,24 @@ MatchingEngine::MatchingEngine(MarketDataPublisher& md_pub)
 
 void MatchingEngine::addSymbol(SymbolId symbol) 
 {
-    books_.try_emplace(symbol, symbol);
+    books_.push_back(OrderBook{ symbol });
 }
 
 void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns) 
 {
-    auto it = books_.find(o.symbol);
-    if (it == books_.end()) 
+    OrderBook* book{ nullptr };
+    for(auto& item : books_)
     {
-        std::cerr << "Unknown symbol: " << o.symbol << "\n";
-        return;
+        if(item.symbol() == o.symbol)
+        {
+            book = &item;
+
+            break;
+        }
     }
-    auto& book = it->second;
+
+    if(!book)
+        return;
 
     BookOrder incoming{
         o.id,
@@ -50,30 +55,30 @@ void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns)
     }
 
     // Match against book
-    auto [trades, remaining] = book.matchIncoming(incoming, ts_ns);
+    auto [trades, remaining] = book->matchIncoming(incoming, ts_ns);
 
     // Publish trades
-    for (auto const& t : trades) 
+    for (auto const& t : *trades)
     {
         md_pub_.publishTrade(t);
     }
 
     // If limit order has remaining qty & is allowed to rest
-    if (o.type == OrderType::Limit && remaining > 0) 
+    if (o.type == OrderType::Limit && remaining > 0)
     {
         incoming.qty = remaining;
-        book.addOrder(incoming);
+        book->addOrder(incoming);
     }
 
     // Publish top-of-book after each change
     TopOfBook tob;
     tob.symbol = o.symbol;
-    if (auto best_bid = book.bestBid()) 
+    if (auto best_bid = book->bestBid())
     {
         tob.best_bid = *best_bid;
         tob.valid = true;
     }
-    if (auto best_ask = book.bestAsk()) 
+    if (auto best_ask = book->bestAsk())
     {
         tob.best_ask = *best_ask;
         tob.valid = tob.valid && true;
@@ -86,14 +91,16 @@ void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns)
 
 void MatchingEngine::handleCancel(const CancelOrder& c) 
 {
+    NScopeTimers::start("MatchingEngine::handleCancel");
+
     // Very naive: scan all books and cancel first match
-    for (auto& [sym, book] : books_) 
+    for (auto& book : books_)
     {
         if (book.cancelOrder(c.id)) 
         {
             // After cancel we could publish new top-of-book
             TopOfBook tob;
-            tob.symbol = sym;
+            tob.symbol = book.symbol();
             if (auto best_bid = book.bestBid()) 
             {
                 tob.best_bid = *best_bid;
@@ -111,4 +118,5 @@ void MatchingEngine::handleCancel(const CancelOrder& c)
             break;
         }
     }
+    NScopeTimers::endAndLog("MatchingEngine::handleCancel");
 }

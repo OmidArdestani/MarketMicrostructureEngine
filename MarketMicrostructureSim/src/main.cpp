@@ -58,20 +58,20 @@ int main() {
     MarketDataPublisher md_pub;
 
     // Subscribe to market data streams
-    md_pub.onTopOfBook([](const TopOfBook& tob) {
-        // std::cout << "[TOB] " << tob.symbol
-        //           << " | Bid: " << tob.best_bid.price << " x " << tob.best_bid.qty
-        //           << " | Ask: " << tob.best_ask.price << " x " << tob.best_ask.qty
-        //           << "\n";
-    });
+    // md_pub.onTopOfBook([](const TopOfBook& tob) {
+    //     // std::cout << "[TOB] " << tob.symbol
+    //     //           << " | Bid: " << tob.best_bid.price << " x " << tob.best_bid.qty
+    //     //           << " | Ask: " << tob.best_ask.price << " x " << tob.best_ask.qty
+    //     //           << "\n";
+    // });
 
-    md_pub.onTrade([](const Trade& t) {
-        // std::cout << "[TRADE] " << t.symbol
-        //           << " | Px: " << t.price
-        //           << " | Qty: " << t.qty
-        //           << " | Aggressor: " << (t.aggressor_side == Side::Buy ? "B" : "S")
-        //           << "\n";
-    });
+    // md_pub.onTrade([](const Trade& t) {
+    //     // std::cout << "[TRADE] " << t.symbol
+    //     //           << " | Px: " << t.price
+    //     //           << " | Qty: " << t.qty
+    //     //           << " | Aggressor: " << (t.aggressor_side == Side::Buy ? "B" : "S")
+    //     //           << "\n";
+    // });
 
     MatchingEngine engine(md_pub);
     engine.addSymbol("XAUUSD");
@@ -83,12 +83,11 @@ int main() {
     auto task = loop.runAsync(events);
 
 
-    using stm = ScopeTimerManagement<std::chrono::nanoseconds>;
-    stm::start("Main Duration");
+    NScopeTimers::start("Main Duration");
 
 
-    uint64_t MAX_TRY{ 1'000'000 };
-    // uint64_t MAX_TRY{ 5 };
+    // uint64_t MAX_TRY{ 1'000'000 };
+    uint64_t MAX_TRY{ 5 };
     while( MAX_TRY > 0 )
     {
         if(events.push(buildEvent()))
@@ -104,7 +103,7 @@ int main() {
 
     task.join();
 
-    stm::endAndLog("Main Duration");
+    NScopeTimers::endAndLog("Main Duration");
 
     return 0;
 }

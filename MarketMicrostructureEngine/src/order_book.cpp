@@ -71,7 +71,7 @@ bool OrderBook::cancelOrder(OrderId id)
     return false;
 }
 
-std::pair<std::vector<Trade>, Quantity> OrderBook::matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns)
+std::pair<std::vector<Trade>*, Quantity> OrderBook::matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns)
 {
     static std::vector<Trade> trades;
     Quantity remaining = incoming.qty;
@@ -134,7 +134,7 @@ std::pair<std::vector<Trade>, Quantity> OrderBook::matchIncoming(const BookOrder
         exec(bids_, Side::Sell);
     }
 
-    return {trades, remaining};
+    return {&trades, remaining};
 }
 
 std::optional<BookLevel> OrderBook::bestBid() const

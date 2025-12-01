@@ -4,7 +4,9 @@
 #include <map>
 #include <vector>
 #include <deque>
+#include <list>
 #include <optional>
+#include <unordered_map>
 
 namespace MarketMicroStructure {
 
@@ -17,7 +19,7 @@ public:
     // Add a new resting order (no matching logic here)
     void addOrder(const BookOrder& ord);
 
-    // Reduce or remove an existing order by id
+    // Reduce or remove an existing order by id - O(1) lookup via index
     bool cancelOrder(OrderId id);
 
     // Match an incoming order against the book
@@ -37,14 +39,21 @@ private:
 
     // Price -> queue of orders (time-priority per price)
     // For bids: highest price first; for asks: lowest price first.
-    using Queue = std::deque<BookOrder>;
+    // Using std::list for O(1) erase with iterator
+    using Queue = std::list<BookOrder>;
+    using PriceLevel = std::map<Price, Queue, std::greater<Price>>;
+    using PriceLevelAsk = std::map<Price, Queue, std::less<Price>>;
 
-    std::map<Price, Queue, std::greater<Price>> bids_; // best bid at begin()
-    std::map<Price, Queue, std::less<Price>>    asks_; // best ask at begin()
+    PriceLevel bids_; // best bid at begin()
+    PriceLevelAsk asks_; // best ask at begin()
 
-    // Helper: locate order by id (linear scan for demo; could be indexed)
-    bool removeFromSide(OrderId id, std::map<Price, Queue, std::greater<Price>>& side);
-    bool removeFromSide(OrderId id, std::map<Price, Queue, std::less<Price>>&    side);
+    // Index for O(1) order lookup: OrderId -> (Side, Price, iterator into Queue)
+    struct OrderLocation {
+        Side side;
+        Price price;
+        Queue::iterator it;
+    };
+    std::unordered_map<OrderId, OrderLocation> order_index_;
 };
 
 } // namespace MarketMicroStructure

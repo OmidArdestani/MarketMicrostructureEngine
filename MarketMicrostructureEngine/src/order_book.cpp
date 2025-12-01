@@ -10,65 +10,59 @@ void OrderBook::addOrder(const BookOrder& ord)
 {
     if (ord.side == Side::Buy)
     {
-        bids_[ord.price].push_back(ord);
+        auto& queue = bids_[ord.price];
+        queue.push_back(ord);
+        // Store iterator to the newly added order for O(1) lookup
+        order_index_[ord.id] = OrderLocation{ord.side, ord.price, std::prev(queue.end())};
     } 
     else 
     {
-        asks_[ord.price].push_back(ord);
+        auto& queue = asks_[ord.price];
+        queue.push_back(ord);
+        // Store iterator to the newly added order for O(1) lookup
+        order_index_[ord.id] = OrderLocation{ord.side, ord.price, std::prev(queue.end())};
     }
-}
-
-bool OrderBook::removeFromSide(OrderId id, std::map<Price, Queue, std::greater<Price>>& side)
-{
-    for (auto it = side.begin(); it != side.end(); )
-    {
-        auto& q = it->second;
-        for (auto oit = q.begin(); oit != q.end(); ++oit)
-        {
-            if (oit->id == id)
-            {
-                q.erase(oit);
-                if (q.empty())
-                {
-                    it = side.erase(it);
-                }
-                return true;
-            }
-        }
-        ++it;
-    }
-    return false;
-}
-
-bool OrderBook::removeFromSide(OrderId id, std::map<Price, Queue, std::less<Price>>& side)
-{
-    for (auto it = side.begin(); it != side.end(); )
-    {
-        auto& q = it->second;
-        for (auto oit = q.begin(); oit != q.end(); ++oit)
-        {
-            if (oit->id == id)
-            {
-                q.erase(oit);
-                if (q.empty())
-                {
-                    it = side.erase(it);
-                }
-                return true;
-            }
-        }
-        ++it;
-    }
-
-    return false;
 }
 
 bool OrderBook::cancelOrder(OrderId id)
 {
-    if (removeFromSide(id, bids_)) return true;
-    if (removeFromSide(id, asks_)) return true;
+    // O(1) lookup in the index
+    auto idx_it = order_index_.find(id);
+    if (idx_it == order_index_.end())
+    {
+        return false; // Order not found
+    }
 
-    return false;
+    const auto& loc = idx_it->second;
+    
+    if (loc.side == Side::Buy)
+    {
+        auto price_it = bids_.find(loc.price);
+        if (price_it != bids_.end())
+        {
+            price_it->second.erase(loc.it);
+            if (price_it->second.empty())
+            {
+                bids_.erase(price_it);
+            }
+        }
+    }
+    else
+    {
+        auto price_it = asks_.find(loc.price);
+        if (price_it != asks_.end())
+        {
+            price_it->second.erase(loc.it);
+            if (price_it->second.empty())
+            {
+                asks_.erase(price_it);
+            }
+        }
+    }
+
+    // Remove from index
+    order_index_.erase(idx_it);
+    return true;
 }
 
 std::pair<std::vector<Trade>*, Quantity> OrderBook::matchIncoming(const BookOrder& incoming, std::uint64_t ts_ns)
@@ -114,6 +108,8 @@ std::pair<std::vector<Trade>*, Quantity> OrderBook::matchIncoming(const BookOrde
 
             if (resting.qty == 0)
             {
+                // Remove fully filled order from index
+                order_index_.erase(resting.id);
                 queue.pop_front();
                 if (queue.empty())
                 {

@@ -9,24 +9,17 @@ MatchingEngine::MatchingEngine(MarketDataPublisher& md_pub)
 
 void MatchingEngine::addSymbol(SymbolId symbol) 
 {
-    books_.push_back(OrderBook{ symbol });
+    books_.emplace(symbol, OrderBook{ symbol });
 }
 
 void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns) 
 {
-    OrderBook* book{ nullptr };
-    for(auto& item : books_)
-    {
-        if(item.symbol() == o.symbol)
-        {
-            book = &item;
-
-            break;
-        }
-    }
-
-    if(!book)
+    // O(1) lookup for the order book
+    auto book_it = books_.find(o.symbol);
+    if (book_it == books_.end())
         return;
+
+    OrderBook& book = book_it->second;
 
     BookOrder incoming{
         o.id,
@@ -37,7 +30,7 @@ void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns)
         ts_ns
     };
 
-    // Market order: treat price as crossing “infinite”
+    // Market order: treat price as crossing "infinite"
     if (o.type == OrderType::Market) 
     {
         static Price MaxPrice{ std::numeric_limits<Price>::max() };
@@ -55,30 +48,34 @@ void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns)
     }
 
     // Match against book
-    auto [trades, remaining] = book->matchIncoming(incoming, ts_ns);
+    auto [trades, remaining] = book.matchIncoming(incoming, ts_ns);
 
-    // Publish trades
+    // Publish trades and remove filled orders from the symbol index
     for (auto const& t : *trades)
     {
         md_pub_.publishTrade(t);
+        // Remove fully filled resting orders from symbol index
+        order_symbol_index_.erase(t.resting_id);
     }
 
     // If limit order has remaining qty & is allowed to rest
     if (o.type == OrderType::Limit && remaining > 0)
     {
         incoming.qty = remaining;
-        book->addOrder(incoming);
+        book.addOrder(incoming);
+        // Index the order for O(1) cancel lookup
+        order_symbol_index_[o.id] = o.symbol;
     }
 
     // Publish top-of-book after each change
     TopOfBook tob;
     tob.symbol = o.symbol;
-    if (auto best_bid = book->bestBid())
+    if (auto best_bid = book.bestBid())
     {
         tob.best_bid = *best_bid;
         tob.valid = true;
     }
-    if (auto best_ask = book->bestAsk())
+    if (auto best_ask = book.bestAsk())
     {
         tob.best_ask = *best_ask;
         tob.valid = tob.valid && true;
@@ -93,29 +90,44 @@ void MatchingEngine::handleCancel(const CancelOrder& c)
 {
     NScopeTimers::start("MatchingEngine::handleCancel");
 
-    // Very naive: scan all books and cancel first match
-    for (auto& book : books_)
+    // O(1) lookup to find the symbol for this order
+    auto idx_it = order_symbol_index_.find(c.id);
+    if (idx_it == order_symbol_index_.end())
     {
-        if (book.cancelOrder(c.id)) 
+        NScopeTimers::endAndLog("MatchingEngine::handleCancel");
+        return; // Order not found
+    }
+
+    const SymbolId& symbol = idx_it->second;
+    auto book_it = books_.find(symbol);
+    if (book_it == books_.end())
+    {
+        NScopeTimers::endAndLog("MatchingEngine::handleCancel");
+        return;
+    }
+
+    OrderBook& book = book_it->second;
+    if (book.cancelOrder(c.id)) 
+    {
+        // Remove from symbol index
+        order_symbol_index_.erase(idx_it);
+        
+        // After cancel we could publish new top-of-book
+        TopOfBook tob;
+        tob.symbol = symbol;
+        if (auto best_bid = book.bestBid()) 
         {
-            // After cancel we could publish new top-of-book
-            TopOfBook tob;
-            tob.symbol = book.symbol();
-            if (auto best_bid = book.bestBid()) 
-            {
-                tob.best_bid = *best_bid;
-                tob.valid = true;
-            }
-            if (auto best_ask = book.bestAsk()) 
-            {
-                tob.best_ask = *best_ask;
-                tob.valid = tob.valid && true;
-            }
-            if (tob.valid) 
-            {
-                md_pub_.publishTopOfBook(tob);
-            }
-            break;
+            tob.best_bid = *best_bid;
+            tob.valid = true;
+        }
+        if (auto best_ask = book.bestAsk()) 
+        {
+            tob.best_ask = *best_ask;
+            tob.valid = tob.valid && true;
+        }
+        if (tob.valid) 
+        {
+            md_pub_.publishTopOfBook(tob);
         }
     }
     NScopeTimers::endAndLog("MatchingEngine::handleCancel");

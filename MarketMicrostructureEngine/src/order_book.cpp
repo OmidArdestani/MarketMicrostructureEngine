@@ -6,41 +6,59 @@ OrderBook::OrderBook(SymbolId symbol)
     : symbol_(std::move(symbol))
 {}
 
-void OrderBook::addOrder(const BookOrder& ord) 
+void OrderBook::addOrder(const BookOrder& ord)
 {
+    Queue* queue = nullptr;
     if (ord.side == Side::Buy)
     {
-        bids_[ord.price].push_back(ord);
-    } 
-    else 
-    {
-        asks_[ord.price].push_back(ord);
+        queue = &bids_[ord.price];
     }
+    else
+    {
+        queue = &asks_[ord.price];
+    }
+    queue->push_back(ord);
+    order_index_[ord.id] = OrderLocation{ord.side, ord.price, std::prev(queue->end())};
 }
 
-bool OrderBook::removeFromSide(OrderId id, std::map<Price, Queue, std::greater<Price>>& side)
+bool OrderBook::removeFromSide(OrderId id, PriceLevelBid& side)
 {
-    for (auto it = side.begin(); it != side.end(); )
+    // O(1) lookup in the index
+    auto idx_it = order_index_.find(id);
+    if (idx_it == order_index_.end())
     {
-        auto& q = it->second;
-        for (auto oit = q.begin(); oit != q.end(); ++oit)
+        return false; // Order not found
+    }
+    const auto& loc = idx_it->second;
+
+    auto eraseFromSide = [&](auto& side_map) {
+        auto price_it = side_map.find(loc.price);
+        if (price_it != side_map.end())
         {
-            if (oit->id == id)
+            price_it->second.erase(loc.it);
+            if (price_it->second.empty())
             {
-                q.erase(oit);
-                if (q.empty())
-                {
-                    it = side.erase(it);
-                }
-                return true;
+                side_map.erase(price_it);
             }
         }
-        ++it;
+    };
+
+    if (loc.side == Side::Buy)
+    {
+        eraseFromSide(bids_);
     }
-    return false;
+    else
+    {
+        eraseFromSide(asks_);
+    }
+
+    // Remove from index
+    order_index_.erase(idx_it);
+
+    return true;
 }
 
-bool OrderBook::removeFromSide(OrderId id, std::map<Price, Queue, std::less<Price>>& side)
+bool OrderBook::removeFromSide(OrderId id, PriceLevelAsk &side)
 {
     for (auto it = side.begin(); it != side.end(); )
     {
@@ -82,8 +100,8 @@ std::pair<std::vector<Trade>*, Quantity> OrderBook::matchIncoming(const BookOrde
     {
         while (remaining > 0 && !book_side.empty()) 
         {
-            auto it = book_side.begin();         // best price
-            auto& queue = it->second;
+            auto it       = book_side.begin();         // best price
+            auto& queue   = it->second;
             auto& resting = queue.front();
 
             // Price check
@@ -114,6 +132,8 @@ std::pair<std::vector<Trade>*, Quantity> OrderBook::matchIncoming(const BookOrde
 
             if (resting.qty == 0)
             {
+                // Remove fully filled order from index
+                order_index_.erase(resting.id);
                 queue.pop_front();
                 if (queue.empty())
                 {

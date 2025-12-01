@@ -86,8 +86,8 @@ int main() {
     NScopeTimers::start("Main Duration");
 
 
-    // uint64_t MAX_TRY{ 1'000'000 };
-    uint64_t MAX_TRY{ 5 };
+    uint64_t MAX_TRY{ 1'000'000 };
+    // uint64_t MAX_TRY{ 5 };
     while( MAX_TRY > 0 )
     {
         if(events.push(buildEvent()))

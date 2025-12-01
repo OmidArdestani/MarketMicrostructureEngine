@@ -8,20 +8,17 @@ OrderBook::OrderBook(SymbolId symbol)
 
 void OrderBook::addOrder(const BookOrder& ord) 
 {
+    Queue* queue = nullptr;
     if (ord.side == Side::Buy)
     {
-        auto& queue = bids_[ord.price];
-        queue.push_back(ord);
-        // Store iterator to the newly added order for O(1) lookup
-        order_index_[ord.id] = OrderLocation{ord.side, ord.price, std::prev(queue.end())};
+        queue = &bids_[ord.price];
     } 
     else 
     {
-        auto& queue = asks_[ord.price];
-        queue.push_back(ord);
-        // Store iterator to the newly added order for O(1) lookup
-        order_index_[ord.id] = OrderLocation{ord.side, ord.price, std::prev(queue.end())};
+        queue = &asks_[ord.price];
     }
+    queue->push_back(ord);
+    order_index_[ord.id] = OrderLocation{ord.side, ord.price, std::prev(queue->end())};
 }
 
 bool OrderBook::cancelOrder(OrderId id)
@@ -35,29 +32,25 @@ bool OrderBook::cancelOrder(OrderId id)
 
     const auto& loc = idx_it->second;
     
-    if (loc.side == Side::Buy)
-    {
-        auto price_it = bids_.find(loc.price);
-        if (price_it != bids_.end())
+    auto eraseFromSide = [&](auto& side_map) {
+        auto price_it = side_map.find(loc.price);
+        if (price_it != side_map.end())
         {
             price_it->second.erase(loc.it);
             if (price_it->second.empty())
             {
-                bids_.erase(price_it);
+                side_map.erase(price_it);
             }
         }
+    };
+    
+    if (loc.side == Side::Buy)
+    {
+        eraseFromSide(bids_);
     }
     else
     {
-        auto price_it = asks_.find(loc.price);
-        if (price_it != asks_.end())
-        {
-            price_it->second.erase(loc.it);
-            if (price_it->second.empty())
-            {
-                asks_.erase(price_it);
-            }
-        }
+        eraseFromSide(asks_);
     }
 
     // Remove from index

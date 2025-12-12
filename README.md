@@ -199,7 +199,7 @@ int main() {
     EngineEvent event{
         .type = EngineEvent::Type::New,
         .new_order = { /* order details */ },
-        .ts_ns = get_current_time_ns()
+        .ts_ns = static_cast<std::uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())
     };
     events.push(event);
     

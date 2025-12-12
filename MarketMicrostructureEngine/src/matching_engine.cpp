@@ -23,14 +23,7 @@ void MatchingEngine::handleNewOrder(const NewOrder& o, std::uint64_t ts_ns)
 
     OrderBook& book = book_it->second;
 
-    BookOrder incoming{
-        o.id,
-        o.trader,
-        o.qty,
-        o.price,
-        o.side,
-        ts_ns
-    };
+    BookOrder incoming{ o, ts_ns };
 
     // Market order: treat price as crossing "infinite"
     if (o.type == OrderType::Market) 

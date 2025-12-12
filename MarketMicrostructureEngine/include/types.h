@@ -72,6 +72,16 @@ struct BookOrder {
     Price     price;
     Side      side;
     std::uint64_t ts_ns; // arrival time, for time priority
+
+    BookOrder(const NewOrder& o, std::uint64_t ts_ns)
+    {
+        this->id     = o.id;
+        this->trader = o.trader;
+        this->qty    = o.qty;
+        this->price  = o.price;
+        this->side   = o.side;
+        this->ts_ns  = ts_ns;
+    }
 };
 
 } // namespace MarketMicroStructure

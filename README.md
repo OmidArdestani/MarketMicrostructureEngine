@@ -1,45 +1,46 @@
 # MarketMicrostructureEngine
 
-A high-performance C++ matching engine and order book implementation for simulating market microstructure. This project provides a lock-free, multi-threaded simulation environment for testing trading strategies and analyzing market dynamics.
+A high-performance C++ matching engine and market simulation platform built on top of the HFTToolset library. This project provides a lock-free, multi-threaded simulation environment for testing trading strategies and analyzing market microstructure dynamics.
 
 ## Overview
 
-MarketMicrostructureEngine is a sophisticated financial market simulation platform that implements a full limit order book with price-time priority matching. The engine is designed for high throughput and low latency, featuring a lock-free ring buffer for event processing and efficient data structures for order management.
+MarketMicrostructureEngine is a sophisticated financial market simulation platform that leverages the HFTToolset library for core components including limit order book, lock-free ring buffer, and performance measurement utilities. The engine implements price-time priority matching and is designed for high throughput and low latency event processing.
 
 ## Key Features
 
-- **Full Limit Order Book**: Price-time priority matching with support for multiple price levels
-- **High-Performance Event Loop**: Lock-free ring buffer (HPRingBuffer) for efficient event processing
+- **Full Limit Order Book**: Price-time priority matching via HFTToolset's OrderBook implementation
+- **High-Performance Event Loop**: Lock-free SPSC ring buffer (HPRingBuffer from HFTToolset) for efficient event processing
 - **Multi-Symbol Support**: Handle multiple trading symbols simultaneously
 - **Order Types**: Support for Limit and Market orders
 - **Time-in-Force Options**: Day, IOC (Immediate-or-Cancel), and FOK (Fill-or-Kill) order types
 - **Market Data Publishing**: Real-time callbacks for trades, top-of-book updates, and depth snapshots
 - **O(1) Order Operations**: Constant-time order cancellation via indexed lookups
 - **Thread-Safe**: Asynchronous event processing with lock-free data structures
+- **Performance Measurement**: Built-in ScopeTimer from HFTToolset for latency tracking
 - **Modern C++23**: Utilizes latest C++ features for optimal performance
 
 ## Architecture
 
-The project is organized into two main components:
+The project integrates with HFTToolset as a Git submodule and builds a simulation on top of its components:
 
-### 1. MarketMicrostructureEngine (Core Library)
+### HFTToolset Components (external/)
 
-The core library provides the fundamental matching engine components:
+The HFTToolset library provides the foundational building blocks:
 
-- **OrderBook**: Manages bid/ask queues with price-time priority
-- **MatchingEngine**: Coordinates multiple order books and processes orders
-- **MarketDataPublisher**: Event-driven system for market data callbacks
-- **Types**: Core data structures (Order, Trade, BookLevel, etc.)
-- **ScopeTimer**: Performance measurement utility
+- **OrderBook**: Price-time priority matching engine
+- **MatchingEngine**: Multi-symbol order book coordinator
+- **MarketDataPublisher**: Event-driven market data callbacks
+- **HPRingBuffer**: Lock-free SPSC ring buffer
+- **ScopeTimer**: RAII-based performance measurement
+- **Types**: Core market microstructure data structures
 
-### 2. MarketMicrostructureSim (Simulation)
+### Simulation Layer (src/)
 
-The simulation component provides:
+Built on top of HFTToolset:
 
-- **EventLoop**: High-performance event processing loop
-- **HPRingBuffer**: Lock-free ring buffer for event queuing
-- **ScenarioLoader**: Load and replay trading scenarios
-- **Main**: Simulation entry point with configurable scenarios
+- **EventLoop**: High-performance event processing using HPRingBuffer
+- **ScenarioLoader**: Load and replay trading scenarios from files
+- **Main**: Simulation entry point with random event generation
 
 ## Project Structure
 
@@ -48,47 +49,56 @@ MarketMicrostructureEngine/
 ├── CMakeLists.txt                          # Root CMake configuration
 ├── LICENSE                                  # MIT License
 ├── README.md                                # This file
-├── MarketMicrostructureEngine/             # Core engine library
-│   ├── CMakeLists.txt
-│   ├── include/
-│   │   ├── matching_engine.h               # Main matching engine
-│   │   ├── order_book.h                    # Order book implementation
-│   │   ├── market_data_publisher.h         # Market data callbacks
-│   │   ├── types.h                         # Core data types
-│   │   └── ScopeTimer.hpp                  # Performance timer
-│   └── src/
-│       ├── matching_engine.cpp
-│       ├── order_book.cpp
-│       └── market_data_publisher.cpp
-└── MarketMicrostructureSim/                # Simulation application
-    ├── CMakeLists.txt
-    ├── include/
-    │   ├── sim_event_loop.h                # Event processing loop
-    │   ├── HPRingBuffer.hpp                # Lock-free ring buffer
-    │   └── scenario_loader.h               # Scenario loading
-    ├── src/
-    │   ├── main.cpp                        # Simulation entry point
-    │   ├── sim_event_loop.cpp
-    │   └── scenario_loader.cpp
-    └── data/
-        └── sample_scenario.txt             # Sample trading scenario
+├── external/
+│   └── HFTToolset/                         # HFTToolset submodule
+│       ├── CMakeLists.txt
+│       ├── README.md
+│       ├── examples/
+│       │   └── p99_example.hpp             # Latency benchmarking examples
+│       └── src/
+│           ├── HPRingBuffer.hpp            # Lock-free SPSC ring buffer
+│           ├── ScopeTimer.hpp              # Performance measurement
+│           ├── benchmark_p99.hpp           # P99/P99.9 latency tracking
+│           ├── library_anchor.cpp
+│           └── Market/
+│               ├── order_book.h            # OrderBook interface
+│               ├── order_book.cpp          # OrderBook implementation
+│               ├── matching_engine.h       # MatchingEngine interface
+│               ├── matching_engine.cpp     # MatchingEngine implementation
+│               ├── market_data_publisher.h # Market data callbacks
+│               ├── market_data_publisher.cpp
+│               └── types.h                 # Market microstructure types
+├── include/                                # Simulation headers
+│   ├── HPRingBuffer.hpp                    # Ring buffer reference
+│   ├── scenario_loader.h                   # Scenario loading
+│   └── sim_event_loop.h                    # Event loop
+├── src/                                    # Simulation implementation
+│   ├── main.cpp                            # Simulation entry point
+│   ├── scenario_loader.cpp                 # Scenario loader implementation
+│   └── sim_event_loop.cpp                  # Event loop implementation
+└── data/
+    └── sample_scenario.txt                 # Sample trading scenario
 ```
 
 ## Requirements
 
-- **CMake**: Version 3.16 or higher
+- **CMake**: Version 3.20 or higher
 - **C++ Compiler**: Support for C++23 standard
   - GCC 12+ or Clang 15+ recommended
 - **Operating System**: Linux, macOS, or Windows
+- **Git**: For cloning the repository and submodules
 
 ## Building
 
 ### Standard Build
 
 ```bash
-# Clone the repository
-git clone https://github.com/OmidArdestani/MarketMicrostructureEngine.git
+# Clone the repository with submodules
+git clone --recursive https://github.com/OmidArdestani/MarketMicrostructureEngine.git
 cd MarketMicrostructureEngine
+
+# If already cloned without --recursive, initialize submodules
+git submodule update --init --recursive
 
 # Create build directory
 mkdir build && cd build
@@ -106,9 +116,8 @@ cmake --build . --target install
 ```
 
 This will install:
-- Shared library (`libMarketMicrostructureEngineLib.so`/`.dll`) to `lib/`
-- Header files to `include/`
-- Executable (`MarketMicrostructureSim`) to `bin/`
+- HFTToolset library components
+- Simulation executable (`MarketMicrostructureSim`) to `bin/`
 
 ## Usage
 
@@ -118,14 +127,14 @@ The simulation generates random orders across multiple symbols (XAUUSD, EURUSD, 
 
 ```bash
 # From the build directory
-./MarketMicrostructureSim/MarketMicrostructureSim
+./MarketMicrostructureSim
 ```
 
 The default simulation:
 - Processes 1,000,000 events
-- Uses a ring buffer of 8,192 elements
+- Uses a lock-free ring buffer of 8,192 elements
 - Generates random limit orders and cancellations
-- Measures overall execution time
+- Measures overall execution time with ScopeTimer
 
 ### Basic Integration Example
 
@@ -213,9 +222,13 @@ int main() {
 
 ## Core Components
 
-### OrderBook
+### HFTToolset Integration
 
-The `OrderBook` class maintains separate bid and ask queues with price-time priority:
+The project leverages the following components from HFTToolset:
+
+#### OrderBook
+
+The `OrderBook` class from HFTToolset maintains separate bid and ask queues with price-time priority:
 
 - **Add Order**: `addOrder()` - Add resting limit order to the book
 - **Cancel Order**: `cancelOrder()` - Remove order with O(1) lookup
@@ -223,31 +236,59 @@ The `OrderBook` class maintains separate bid and ask queues with price-time prio
 - **Query Best Price**: `bestBid()`, `bestAsk()` - Get best bid/ask
 - **Depth Snapshot**: `bids()`, `asks()` - Get market depth
 
-### MatchingEngine
+#### MatchingEngine
 
-The `MatchingEngine` coordinates multiple order books:
+The `MatchingEngine` from HFTToolset coordinates multiple order books:
 
 - **Symbol Management**: `addSymbol()` - Register new trading symbols
 - **Order Processing**: `handleNewOrder()` - Process new orders
 - **Cancellation**: `handleCancel()` - Cancel existing orders
 - **Multi-Symbol Support**: Manages separate order books per symbol
 
-### MarketDataPublisher
+#### MarketDataPublisher
 
-Event-driven market data distribution:
+Event-driven market data distribution from HFTToolset:
 
 - **Trade Callbacks**: `onTrade()` - Subscribe to trade executions
 - **Top-of-Book Updates**: `onTopOfBook()` - Subscribe to best bid/ask
 - **Depth Snapshots**: `onDepthSnapshot()` - Subscribe to order book depth
 
-### HPRingBuffer
+#### HPRingBuffer
 
-Lock-free, multi-producer single-consumer ring buffer:
+Lock-free, single-producer single-consumer (SPSC) ring buffer from HFTToolset:
 
-- **Thread-Safe Push**: Lock-free writes for multiple producers
+- **Thread-Safe Push**: Lock-free writes for single producer
 - **Efficient Pop**: Single consumer reads without contention
-- **Power-of-Two Size**: Optimized for performance
+- **Power-of-Two Size**: Optimized for performance with modulo operations
 - **Move Semantics**: Support for efficient object transfer
+
+#### ScopeTimer
+
+RAII-based performance measurement from HFTToolset:
+
+- **Automatic Timing**: Start on construction, stop on destruction
+- **Compile-Time Control**: Can be disabled via preprocessor flags
+- **Lightweight**: Minimal overhead for production builds
+
+### Simulation Components
+
+Built on top of HFTToolset:
+
+#### EventLoop
+
+The `EventLoop` class processes events asynchronously using HPRingBuffer:
+
+- **Async Execution**: `runAsync()` - Process events in background thread
+- **Event Processing**: Pulls events from ring buffer and dispatches to MatchingEngine
+- **Graceful Shutdown**: `setWaitForDone()` - Signal completion
+
+#### ScenarioLoader
+
+Loads trading scenarios from configuration files:
+
+- **File Parsing**: Read order sequences from text files
+- **Event Generation**: Convert scenario data to EngineEvent objects
+- **Replay Support**: Execute pre-defined trading scenarios
 
 ## Performance Characteristics
 
@@ -255,7 +296,19 @@ Lock-free, multi-producer single-consumer ring buffer:
 - **Order Cancellation**: O(1) via indexed lookup
 - **Order Matching**: O(1) for best price access, O(k) for k matches
 - **Memory**: Efficient use of std::list for price queues
+- **Event Processing**: Lock-free SPSC ring buffer for minimal latency
 - **Throughput**: Capable of processing millions of events per second
+
+## HFTToolset
+
+This project is built on top of [HFTToolset](https://github.com/OmidArdestani/HFTToolset), a collection of high-performance C++23 utilities for low-latency applications. HFTToolset provides:
+
+- Lock-free data structures (SPSC ring buffer)
+- Performance measurement tools (p99 latency tracking, scope timers)
+- Market microstructure components (order book, matching engine)
+- Zero-cost abstractions with compile-time configurability
+
+For more information about HFTToolset components, see the [HFTToolset documentation](external/HFTToolset/README.md).
 
 ## License
 
@@ -271,14 +324,20 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 Potential areas for development:
 
-- [ ] Scenario replay from file
+- [ ] Enhanced scenario replay from file (currently in development)
 - [ ] Order book visualization
-- [ ] Advanced order types (Stop, Stop-Limit, etc.)
+- [ ] Advanced order types (Stop, Stop-Limit, Iceberg, etc.)
 - [ ] Market maker functionality
-- [ ] Performance benchmarking suite
+- [ ] Performance benchmarking suite with p99 latency tracking
 - [ ] Network protocol support (FIX, ITCH)
 - [ ] Historical data replay
 - [ ] Strategy backtesting framework
+- [ ] Multi-producer support for HPRingBuffer
+- [ ] Order book delta updates for efficient market data
+
+## Related Projects
+
+- **[HFTToolset](https://github.com/OmidArdestani/HFTToolset)**: The foundational library providing core components for this project
 
 ## Author
 

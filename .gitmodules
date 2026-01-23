@@ -1,0 +1,4 @@
+[submodule "external/HFTToolset"]
+    path = external/HFTToolset
+    url = https://github.com/OmidArdestani/HFTToolset.git
+    branch = main

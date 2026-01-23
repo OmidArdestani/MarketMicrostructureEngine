@@ -1,22 +1,30 @@
-project(MarketMicrostructureSim LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.20)
+project(MarketMicroStructureSim LANGUAGES CXX)
 
-add_executable(MarketMicrostructureSim)
-target_sources(MarketMicrostructureSim
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Compiler flags for optimization and warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -O3 -march=native")
+
+
+add_subdirectory(external/HFTToolset)
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+add_executable(MarketMicroStructureSim src/main.cpp)
+
+
+target_sources(MarketMicroStructureSim
     PRIVATE
         src/sim_event_loop.cpp
-        src/scenario_loader.cpp     # if you implement it; otherwise remove
-        src/main.cpp
+        src/scenario_loader.cpp
         include/sim_event_loop.h
         include/scenario_loader.h
-        include/HPRingBuffer.hpp
 )
 
-target_include_directories(MarketMicrostructureEngineLib
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-target_link_libraries(MarketMicrostructureSim
+target_link_libraries(MarketMicroStructureSim
     PRIVATE
-        MarketMicrostructureEngineLib
+    HFT::Toolset
 )

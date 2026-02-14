@@ -1,0 +1,74 @@
+---
+# clang-format configuration for HFT Training Project
+BasedOnStyle: Google
+Language: Cpp
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+ConstructorInitializerIndentWidth: 4
+
+# Line length
+ColumnLimit: 150
+
+# Braces
+BreakBeforeBraces: Allman
+
+# Functions
+AllowShortFunctionsOnASingleLine: Inline
+AlwaysBreakAfterReturnType: None
+
+# Control statements
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+# Pointers and references
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# Includes
+SortIncludes: CaseInsensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^<.*\.h>'
+    Priority:        1
+  - Regex:           '^<.*>'
+    Priority:        2
+  - Regex:           '.*'
+    Priority:        3
+
+# Spacing
+SpaceAfterCStyleCast: true
+SpaceBeforeParens: ControlStatements
+SpacesInAngles: Never
+SpacesInParentheses: true
+SpacesInSquareBrackets: false
+
+# Alignment
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: None
+AlignOperands: Align
+AlignTrailingComments: true
+AlignAfterOpenBracket: Align
+
+# Breaking
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BinPackArguments: false
+BinPackParameters: false
+
+# Namespaces
+CompactNamespaces: false
+FixNamespaceComments: true
+
+# Other
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+SeparateDefinitionBlocks: Always
+ReflowComments: true

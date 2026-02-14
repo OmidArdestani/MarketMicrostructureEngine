@@ -1,0 +1,44 @@
+{
+    // Editor Settings
+    "editor.fontSize": 14,
+    "editor.tabSize": 4,
+    "editor.minimap.enabled": false,
+    "editor.wordWrap": "on",
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+    "editor.defaultFormatter": "xaver.clang-format",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    // Files Settings
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/node_modules": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    },
+    // Search Settings
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.venv": true
+    },
+    // Python Settings
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.tabSize": 4
+    },
+    // Terminal Settings
+    "terminal.integrated.fontSize": 13,
+    // Git Settings
+    "git.autofetch": true,
+    "git.confirmSync": false
+}

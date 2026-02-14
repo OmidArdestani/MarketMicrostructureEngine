@@ -18,6 +18,7 @@
 #include <market/matching_engine.h>
 #include <sim_event_loop.h>
 
+#include <chrono>
 #include <random>
 #include <ScopeTimer.hpp>
 
@@ -40,20 +41,20 @@ EngineEvent buildEvent()
 
     if ( type == 0 )
     {
-        auto the_order = Order{ order_id_dist( rng ),
-                                order_id_dist( rng ),
-                                Symbols[symbol_dist( rng )],
-                                ( rng() % 2 == 0 ? Side::Buy : Side::Sell ),
-                                OrderType::Limit,
-                                TimeInForce::Day,
-                                price_dist( rng ),
-                                qty_dist( rng ),
-                                qty_dist( rng ),
-                                OrderStatus::New,
-                                0,
-                                0,
-                                0,
-                                {} };
+        auto the_order = Order{ .id             = order_id_dist( rng ),
+                                .trader_id      = order_id_dist( rng ),
+                                .symbol         = Symbols[symbol_dist( rng )],
+                                .side           = ( rng() % 2 == 0 ? Side::Buy : Side::Sell ),
+                                .type           = OrderType::Limit,
+                                .tif            = TimeInForce::Day,
+                                .price          = price_dist( rng ),
+                                .quantity       = qty_dist( rng ),
+                                .filled_qty     = qty_dist( rng ),
+                                .status         = OrderStatus::New,
+                                .submit_time    = 0,
+                                .accept_time    = 0,
+                                .queue_position = 0,
+                                .cl_ord_id      = {} };
         Timestamp ts   = std::chrono::steady_clock::now().time_since_epoch().count();
 
         // New order event
@@ -69,17 +70,15 @@ EngineEvent buildEvent()
 
         // Cancel event
         EngineEvent ev;
-        ev.type              = EventType::CancelOrder;
-        ev.cancel.order_id   = order_id_dist( rng );
-        ev.event_time        = ts;
+        ev.type            = EventType::CancelOrder;
+        ev.cancel.order_id = order_id_dist( rng );
+        ev.event_time      = ts;
         return ev;
     }
 }
 
 int main()
 {
-    HFTToolset::MarketDataPublisher md_pub;
-
     HFTToolset::Clock clock;
 
     // Subscribe to market data streams

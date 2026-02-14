@@ -11,6 +11,7 @@
 // ============================================================================
 
 #include <sim_event_loop.h>
+#include <assert.h>
 
 using namespace MarketMicroStructure;
 using namespace HFTToolset;
@@ -40,6 +41,7 @@ void EventLoop::run( EventLoopBuffer& events )
                         engine_.process_cancel( ev->cancel );
                         break;
                     default:
+                        assert(false && "Unknown event type");
                         break;
                 }
             }

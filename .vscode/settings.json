@@ -1,19 +1,16 @@
 {
     // Editor Settings
     "editor.fontSize": 14,
-    "editor.tabSize": 2,
-    "editor.formatOnSave": true,
-    "editor.formatOnPaste": true,
+    "editor.tabSize": 4,
     "editor.minimap.enabled": false,
     "editor.wordWrap": "on",
     "editor.bracketPairColorization.enabled": true,
     "editor.guides.bracketPairs": "active",
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "xaver.clang-format",
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
         "source.organizeImports": "explicit"
     },
-    "clang-format.executable": "/usr/bin/clang-format",
     // Files Settings
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
@@ -43,6 +40,5 @@
     "terminal.integrated.fontSize": 13,
     // Git Settings
     "git.autofetch": true,
-    "git.confirmSync": false,
-    "editor.formatOnSave": false
+    "git.confirmSync": false
 }

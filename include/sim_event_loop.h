@@ -27,7 +27,7 @@ namespace MarketMicroStructure
 using EventLoopBuffer = HPRingBuffer<HFTToolset::EngineEvent, 8192>;
 
 /// @brief Creates a heap-allocated EventLoopBuffer.
-/// The buffer is ~9 MB (EngineEvent is 1152 bytes x 8192 slots) and
+/// The buffer is large (sizeof(HFTToolset::EngineEvent) * 8192 bytes) and
 /// must NOT be placed on the stack to avoid stack overflow.
 inline std::unique_ptr<EventLoopBuffer> makeEventLoopBuffer()
 {

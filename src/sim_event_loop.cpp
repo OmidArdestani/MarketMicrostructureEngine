@@ -24,7 +24,7 @@ std::thread EventLoop::runAsync( EventLoopBuffer& events )
 
 void EventLoop::run( EventLoopBuffer& events )
 {
-    while ( !WaitForDone )
+    while ( !isDone() )
     {
         while ( !events.empty() )
         {

@@ -16,6 +16,8 @@
 #include <common/types.h>
 #include <market/matching_engine.h>
 
+#include <atomic>
+#include <memory>
 #include <thread>
 
 #include "HPRingBuffer.hpp"
@@ -24,6 +26,14 @@ namespace MarketMicroStructure
 {
 using EventLoopBuffer = HPRingBuffer<HFTToolset::EngineEvent, 8192>;
 
+/// @brief Creates a heap-allocated EventLoopBuffer.
+/// The buffer is ~9 MB (EngineEvent is 1152 bytes x 8192 slots) and
+/// must NOT be placed on the stack to avoid stack overflow.
+inline std::unique_ptr<EventLoopBuffer> makeEventLoopBuffer()
+{
+    return std::make_unique<EventLoopBuffer>();
+}
+
 class EventLoop
 {
 public:
@@ -31,11 +41,12 @@ public:
     void run( EventLoopBuffer& events );
     std::thread runAsync( EventLoopBuffer& events );
 
-    void setWaitForDone() { WaitForDone = true; }
+    void setWaitForDone() { wait_for_done_.store( true, std::memory_order_release ); }
+    bool isDone() const { return wait_for_done_.load( std::memory_order_acquire ); }
 
 private:
     HFTToolset::MatchingEngine& engine_;
-    bool WaitForDone{ false };
+    std::atomic<bool> wait_for_done_{ false };
 };
 
 }  // namespace MarketMicroStructure

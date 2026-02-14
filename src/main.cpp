@@ -105,10 +105,10 @@ int main()
 
     EventLoop loop( engine );
 
-    // Heap-allocate: EventLoopBuffer is ~9 MB (EngineEvent × 8192 slots)
-    // and must not live on the stack.
-    EventLoopBuffer events;
-    auto task = loop.runAsync( events );
+    // Heap-allocate: EventLoopBuffer is ~9 MB (EngineEvent x 8192 slots)
+    // and must not live on the stack to avoid stack overflow.
+    auto events = makeEventLoopBuffer();
+    auto task   = loop.runAsync( *events );
 
     NScopeTimers::start( "Main Duration" );
 
@@ -116,14 +116,14 @@ int main()
     // uint64_t MAX_TRY{ 5 };
     while ( MAX_TRY > 0 )
     {
-        if ( events.push( buildEvent() ) )
+        if ( events->push( buildEvent() ) )
         {
             MAX_TRY--;
             continue;
         }
     }
 
-    while ( !events.empty() )
+    while ( !events->empty() )
         ;
 
     loop.setWaitForDone();
